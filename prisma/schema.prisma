@@ -1,0 +1,350 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(PUBLIC)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  PUBLIC
+  COLLECTION
+  PRODUCTION
+  ADMIN
+}
+
+// Product Collections Domain
+model Client {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  regions     String[] // Array of regions like ["Tokyo", "Paris", "Milan"]
+  departments String[] // Array of departments like ["Spa", "Restaurant", "Bathroom"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  collections ProductCollection[]
+  pols        PurchaseOrder[]
+}
+
+enum CollectionType {
+  EXCLUSIVE // Only this client
+  EXCLUSIVE_GROUP // Client group (e.g., Bvlgari-Bali, Bvlgari-Tokyo)
+  GENERAL // Any client can use
+}
+
+model ProductCollection {
+  id                String         @id @default(cuid())
+  collectCode       String         @unique
+  designCode        String
+  nameCode          String
+  categoryCode      String
+  sizeCode          String
+  textureCode       String
+  colorCode         String
+  materialCode      String
+  clientId          String?
+  clientDescription String?
+  collectDate       DateTime?
+  techDraw          String?
+  photo1            String?
+  photo2            String?
+  photo3            String?
+  photo4            String?
+  refId             String?
+  clay              String?
+  clayKG            Decimal?       @db.Decimal(10, 2)
+  clayNote          String?        @db.Text
+  buildTech         String?
+  buildTechNote     String?        @db.Text
+  rim               String?
+  feet              String?
+  casting1          String?
+  casting2          String?
+  casting3          String?
+  casting4          String?
+  castingNote       String?        @db.Text
+  extruder1         String?
+  extruder2         String?
+  extruder3         String?
+  extruder4         String?
+  extruderNote      String?        @db.Text
+  texture1          String?
+  texture2          String?
+  texture3          String?
+  texture4          String?
+  textureNote       String?        @db.Text
+  tools1            String?
+  tools2            String?
+  tools3            String?
+  tools4            String?
+  toolsNote         String?        @db.Text
+  engobe1           String?
+  engobe2           String?
+  engobe3           String?
+  engobe4           String?
+  engobeNote        String?        @db.Text
+  bisqueTemp        Int?           @default(900)
+  bisqueTempNote    String?        @db.Text
+  stainOxide1       String?
+  stainOxide2       String?
+  stainOxide3       String?
+  stainOxide4       String?
+  stainOxideNote    String?        @db.Text
+  lustre1           String?
+  lustre2           String?
+  lustre3           String?
+  lustre4           String?
+  lustreNote        String?        @db.Text
+  lustreTemp        Int?
+  lustreTempNote    String?        @db.Text
+  glaze1            String?
+  glaze2            String?
+  glaze3            String?
+  glaze4            String?
+  glazeDensity1     String?
+  glazeDensity2     String?
+  glazeDensity3     String?
+  glazeDensity4     String?
+  glazeTechnique    String?
+  glazeNote         String?        @db.Text
+  glazeTemp         Int?
+  glazeTempNote     String?        @db.Text
+  firing            String?
+  firingNote        String?        @db.Text
+  width             Decimal?       @db.Decimal(10, 2)
+  height            Decimal?       @db.Decimal(10, 2)
+  length            Decimal?       @db.Decimal(10, 2)
+  diameter          Decimal?       @db.Decimal(10, 2)
+  finalSizeNote     String?        @db.Text
+  collectionType    CollectionType @default(GENERAL)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  client Client?         @relation(fields: [clientId], references: [id])
+  pols   PurchaseOrder[]
+}
+
+// Production Domain
+model PurchaseOrder {
+  id        String    @id @default(cuid())
+  polNumber String    @unique
+  clientId  String
+  orderDate DateTime  @default(now())
+  deadline  DateTime
+  status    PolStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  client              Client              @relation(fields: [clientId], references: [id])
+  items               PurchaseOrderItem[]
+  productionPlans     ProductionPlan[]
+  revisionTickets     RevisionTicket[]
+  ProductCollection   ProductCollection?  @relation(fields: [productCollectionId], references: [id])
+  productCollectionId String?
+}
+
+enum PolStatus {
+  PENDING
+  IN_PRODUCTION
+  COMPLETED
+  CANCELLED
+}
+
+model PurchaseOrderItem {
+  id               String   @id @default(cuid())
+  polId            String
+  productCode      String
+  productName      String
+  color            String
+  texture          String
+  material         String
+  size             String
+  quantity         Int
+  producedQuantity Int      @default(0)
+  targetQuantity   Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  pol PurchaseOrder @relation(fields: [polId], references: [id], onDelete: Cascade)
+}
+
+model ProductionStage {
+  id          String   @id @default(cuid())
+  name        String // e.g., "Forming", "Decoration", "Firing"
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  processes ProcessName[]
+  plans     ProductionPlan[]
+}
+
+model ProcessName {
+  id        String   @id @default(cuid())
+  stageId   String
+  name      String // e.g., "Throwing", "Trimming", "Making Slabs", "Carving"
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stage ProductionStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  logs  ProductionLog[]
+}
+
+model ProductionPlan {
+  id              String     @id @default(cuid())
+  polId           String
+  stageId         String
+  weekStart       DateTime // Monday of the week
+  workerGroup     String // e.g., "Group A", "Group B"
+  isOvertime      Boolean    @default(false)
+  plannedQuantity Int
+  actualQuantity  Int        @default(0)
+  status          PlanStatus @default(PLANNED)
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  pol   PurchaseOrder   @relation(fields: [polId], references: [id])
+  stage ProductionStage @relation(fields: [stageId], references: [id])
+  logs  ProductionLog[]
+}
+
+enum PlanStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model ProductionLog {
+  id            String   @id @default(cuid())
+  planId        String
+  processNameId String?
+  quantity      Int
+  notes         String?
+  loggedAt      DateTime @default(now())
+
+  plan        ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  processName ProcessName?   @relation(fields: [processNameId], references: [id])
+}
+
+model RevisionTicket {
+  id              String         @id @default(cuid())
+  polId           String
+  productCode     String
+  title           String
+  purpose         String
+  explanation     String         @db.Text
+  attachments     String[] // Array of file URLs
+  status          RevisionStatus @default(PENDING)
+  submittedByRole UserRole
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  pol PurchaseOrder @relation(fields: [polId], references: [id])
+}
+
+enum RevisionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IMPLEMENTED
+}
+
+// Lookup Tables
+model CollectionCategory {
+  code String @id
+  name String
+}
+
+model CollectionColor {
+  code String @id
+  name String
+}
+
+model CollectionDesign {
+  code String @id
+  name String
+}
+
+model CollectionMaterial {
+  code String @id
+  name String
+}
+
+model CollectionName {
+  code String  @id
+  name String?
+}
+
+model CollectionSize {
+  code String @id
+  name String
+}
+
+model CollectionTexture {
+  code String @id
+  name String
+}
+
+model Unit {
+  id    String @id
+  value String
+}

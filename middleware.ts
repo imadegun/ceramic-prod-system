@@ -1,0 +1,1 @@
+export { default } from './src/lib/auth-middleware';

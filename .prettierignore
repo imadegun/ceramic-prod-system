@@ -1,0 +1,8 @@
+.next
+out
+build
+node_modules
+*.min.js
+*.min.css
+coverage
+.nyc_output
