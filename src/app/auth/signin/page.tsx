@@ -35,7 +35,7 @@ export default function SignInPage() {
         const session = await getSession();
         if (session?.user) {
           // Redirect based on user role
-          switch (session.user.role) {
+          switch ((session.user as any).role) {
             case 'COLLECTION':
               router.push('/collections');
               break;

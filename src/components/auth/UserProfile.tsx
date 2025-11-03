@@ -64,12 +64,12 @@ export function UserProfile() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-center">
-          <Badge variant={getRoleBadgeVariant(session.user.role || 'PUBLIC')}>
-            {session.user.role || 'PUBLIC'}
+          <Badge variant={getRoleBadgeVariant((session.user as any).role || 'PUBLIC')}>
+            {(session.user as any).role || 'PUBLIC'}
           </Badge>
         </div>
         <p className="text-sm text-gray-600 text-center">
-          {getRoleDescription(session.user.role || 'PUBLIC')}
+          {getRoleDescription((session.user as any).role || 'PUBLIC')}
         </p>
         <div className="flex justify-center pt-4">
           <SignOutButton />
