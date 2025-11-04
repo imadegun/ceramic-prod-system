@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SessionProvider } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +48,7 @@ interface CollectionsResponse {
   };
 }
 
-export default function CollectionsPage() {
+function CollectionsPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [collections, setCollections] = useState<ProductCollection[]>([]);
@@ -386,5 +387,13 @@ export default function CollectionsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CollectionsPage() {
+  return (
+    <SessionProvider>
+      <CollectionsPageContent />
+    </SessionProvider>
   );
 }

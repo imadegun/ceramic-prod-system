@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SessionProvider } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,7 @@ interface Client {
   departments: string[];
 }
 
-export default function NewCollectionPage() {
+function NewCollectionPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
@@ -503,5 +504,13 @@ export default function NewCollectionPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewCollectionPage() {
+  return (
+    <SessionProvider>
+      <NewCollectionPageContent />
+    </SessionProvider>
   );
 }

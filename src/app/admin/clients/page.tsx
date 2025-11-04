@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -148,10 +147,15 @@ function AdminClientsPageContent() {
     }
   };
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClients = clients.filter(client => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      client.name.toLowerCase().includes(searchLower) ||
+      client.code.toLowerCase().includes(searchLower) ||
+      client.regions.some(region => region.toLowerCase().includes(searchLower)) ||
+      client.departments.some(dept => dept.toLowerCase().includes(searchLower))
+    );
+  });
 
   if (status === 'loading' || loading) {
     return (
@@ -169,14 +173,6 @@ function AdminClientsPageContent() {
       <div className="flex items-center justify-center min-h-[400px]">
         <p className="text-muted-foreground">Access denied. Admin role required.</p>
       </div>
-    );
-  }
-  
-  export default function AdminClientsPage() {
-    return (
-      <SessionProvider>
-        <AdminClientsPageContent />
-      </SessionProvider>
     );
   }
 
@@ -203,7 +199,7 @@ function AdminClientsPageContent() {
             <div className="relative w-96">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search clients by name or code..."
+                placeholder="Search clients by name, code, regions, or departments..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -367,7 +363,6 @@ function AdminClientsPageContent() {
   );
 }
 
-
 interface ClientFormProps {
   client?: Client;
   onSubmit: (formData: FormData) => void;
@@ -442,5 +437,13 @@ function ClientForm({ client, onSubmit }: ClientFormProps) {
         </Button>
       </div>
     </form>
+  );
+}
+
+export default function AdminClientsPage() {
+  return (
+    <SessionProvider>
+      <AdminClientsPageContent />
+    </SessionProvider>
   );
 }
